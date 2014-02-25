@@ -52,19 +52,31 @@ std::vector<std::vector<int> > Graph::findCCs() {
   return res;
 }
 
+Graph Graph::findMST(const std::string& name) {
+  int vid = vertexMap[name];
+  Vertex* s = vertexVec[vid];
+  return findMST(s);
+}
+
 Graph Graph::findMST(Vertex* s) {
   Graph mst;
   set<Vertex*, VertexComp> q;
 
-  for (size_t i = 0, len = vertexVec.size(); i < len; ++i) {
-    Vertex* u = vertexVec[i];
+
+  std::vector<int> vids;
+  map<int, bool> visited;
+  findCCHelper(s, visited, vids);
+
+  for (size_t i = 0, len = vids.size(); i < len; ++i) {
+    Vertex* u = vertexVec[vids[i]];
+    u->setPrev();
     u->setKey(numeric_limits<double>::max());
   }
 
   s->setKey(0.0);
 
-  for (size_t i = 0, len = vertexVec.size(); i < len; ++i) {
-    Vertex* u = vertexVec[i];
+  for (size_t i = 0, len = vids.size(); i < len; ++i) {
+    Vertex* u = vertexVec[vids[i]];
     q.insert(u);
   }
 
@@ -73,6 +85,9 @@ Graph Graph::findMST(Vertex* s) {
     q.erase(sit);
 
     Vertex* u = *sit;
+
+    mst.addVertex(u->name);
+
     std::list<Edge*>::iterator eit = u->adj.begin();
     std::list<Edge*>::iterator en = u->adj.end();
 
@@ -82,6 +97,7 @@ Graph Graph::findMST(Vertex* s) {
       Vertex* v = vertexVec[vid];
 
       if (q.count(v) > 0 && edge->cost < v->getKey()) {
+
         q.erase(v);
         v->setKey(edge->cost);
         q.insert(v);
@@ -89,6 +105,8 @@ Graph Graph::findMST(Vertex* s) {
 
       ++eit;
     }
+
+
 
 
   }

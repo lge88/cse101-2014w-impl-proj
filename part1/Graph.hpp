@@ -162,6 +162,7 @@ class Graph {
   std::vector<std::vector<int> > findCCs();
   std::vector<Graph> findMSTs();
   Graph findMST(Vertex*);
+  Graph findMST(const std::string& name);
 
  private:
   void findCCHelper(Vertex*, std::map<int, bool>&, std::vector<int>&);
