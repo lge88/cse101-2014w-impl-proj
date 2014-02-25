@@ -40,10 +40,14 @@ class Vertex {
  public:
   double getKey() { return scratch; }
   void setKey(double k) { scratch = k; }
+  int getPrev() { return prev; }
+  void setPrev(int p) { prev = p; }
+  std::string getName() { return name; }
+  void setName(const std::string& s) { name = s; }
 };
 
 double random0To1() {
-  return random() / std::numeric_limits<int>::max();
+  return 1.0 * random() / std::numeric_limits<int>::max();
 }
 
 std::string itoa(int i) {
@@ -71,7 +75,7 @@ class Graph {
 
     // Generate edges:
     for (int i = 0; i < n; ++i) {
-      for (int j = i; j < n; ++j) {
+      for (int j = i + 1; j < n; ++j) {
         double q = random0To1();
         if (q < p) {
           std::string u = "V" + itoa(i);
@@ -82,7 +86,9 @@ class Graph {
     }
 
     // TODO: Assign edge weights:
-
+    for (size_t i = 0, len = edgeVec.size(); i < len; ++i) {
+      edgeVec[i]->cost = random0To1();
+    }
 
   }
 
@@ -158,11 +164,10 @@ class Graph {
     out << "}\n";
   }
 
-  // std::vector<Vertex*> findCCs();
   std::vector<std::vector<int> > findCCs();
   std::vector<Graph> findMSTs();
   Graph findMST(Vertex*);
-  Graph findMST(const std::string& name);
+  Graph findMST(const std::string&);
 
  private:
   void findCCHelper(Vertex*, std::map<int, bool>&, std::vector<int>&);

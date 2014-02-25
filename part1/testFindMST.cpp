@@ -7,7 +7,16 @@
 
 using namespace std;
 
-
+std::ostream& operator<<(std::ostream& out, const vector<vector<int> >& v) {
+  for (int i = 0, len = v.size(); i < len; ++i) {
+    const vector<int>& tmp = v[i];
+    for (int j = 0, len2 = tmp.size(); j < len2; ++j) {
+      out << tmp[j] << " ";
+    }
+    out << "\n";
+  }
+  return out;
+}
 
 void testFindCCs() {
   Graph g;
@@ -34,19 +43,36 @@ void testFindCCs() {
 
   ccs = g.findCCs();
 
-  for (int i = 0, len = ccs.size(); i < len; ++i) {
-    vector<int>& tmp = ccs[i];
-    for (int j = 0, len2 = tmp.size(); j < len2; ++j) {
-      cout << tmp[j] << " ";
-    }
-    cout << "\n";
-  }
-
+  cout << ccs;
   cout << "Num of cc: " << ccs.size() << endl;
 }
 
+void testFindMST() {
+  Graph g;
+  g.addVertex("A");
+  g.addVertex("B");
+  g.addVertex("C");
+  g.addVertex("D");
+  g.addVertex("E");
+
+  g.addEdge("A", "B", 0.10);
+  g.addEdge("A", "C", 0.30);
+  g.addEdge("B", "C", 0.50);
+  g.addEdge("B", "D", 0.60);
+  g.addEdge("C", "D", 0.70);
+  g.addEdge("A", "E", 0.20);
+  g.addEdge("C", "E", 0.40);
+
+  g.toDot(cout);
+
+  cout << "#\n";
+
+  Graph mst = g.findMST("A");
+  mst.toDot(cout);
+
+}
 
 int main() {
-  testFindCCs();
-
+  // testFindCCs();
+  testFindMST();
 }

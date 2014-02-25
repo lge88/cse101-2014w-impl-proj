@@ -1,12 +1,11 @@
-#ifndef _GRAPH.FINDMST_H_
-#define _GRAPH.FINDMST_H_
+#ifndef _GRAPH_FINDMST_H_
+#define _GRAPH_FINDMST_H_
 
 #include <vector>
 #include <set>
 #include <limits>
 
 #include "Graph.hpp"
-#include "Graph.findCCs.hpp"
 
 using namespace std;
 
@@ -58,19 +57,35 @@ Graph Graph::findMST(const std::string& name) {
   return findMST(s);
 }
 
+std::ostream& operator<<(std::ostream& out, const set<Vertex*, VertexComp>& s) {
+  std::set<Vertex*, VertexComp>::const_iterator sit = s.begin();
+  std::set<Vertex*, VertexComp>::const_iterator en = s.end();
+  while (sit != en) {
+    out << (*sit)->getName() << " ";
+    out << (*sit)->getKey() << " ";
+    ++sit;
+  }
+  return out;
+}
+
 Graph Graph::findMST(Vertex* s) {
   Graph mst;
   set<Vertex*, VertexComp> q;
-
 
   std::vector<int> vids;
   map<int, bool> visited;
   findCCHelper(s, visited, vids);
 
+  // Edge weight is from 0 to 1, so 10.0 can be
+  // used as "infinity".
+  double inf = 10.0;
   for (size_t i = 0, len = vids.size(); i < len; ++i) {
     Vertex* u = vertexVec[vids[i]];
-    u->setPrev();
-    u->setKey(numeric_limits<double>::max());
+    u->setPrev(-1);
+    u->setKey(inf);
+
+    // std::set do not allow duplicate keys
+    inf += 0.1;
   }
 
   s->setKey(0.0);
@@ -82,11 +97,25 @@ Graph Graph::findMST(Vertex* s) {
 
   while (q.size() > 0) {
     set<Vertex*, VertexComp>::iterator sit = q.begin();
-    q.erase(sit);
-
     Vertex* u = *sit;
 
+    q.erase(sit);
+
     mst.addVertex(u->name);
+
+    if (u->getPrev() != -1) {
+      Vertex* prev = vertexVec[u->getPrev()];
+      std::list<Edge*>::iterator eit = u->adj.begin();
+      std::list<Edge*>::iterator en = u->adj.end();
+      while (eit != en) {
+        if ((*eit)->otherEnd(u->indx) == u->getPrev())
+          break;
+        ++eit;
+      }
+
+      mst.addEdge(u->name, prev->name, (*eit)->cost);
+    }
+
 
     std::list<Edge*>::iterator eit = u->adj.begin();
     std::list<Edge*>::iterator en = u->adj.end();
@@ -97,22 +126,14 @@ Graph Graph::findMST(Vertex* s) {
       Vertex* v = vertexVec[vid];
 
       if (q.count(v) > 0 && edge->cost < v->getKey()) {
-
         q.erase(v);
         v->setKey(edge->cost);
+        v->setPrev(u->indx);
         q.insert(v);
       }
-
       ++eit;
     }
-
-
-
-
   }
-
-
-
 
   return mst;
 }
