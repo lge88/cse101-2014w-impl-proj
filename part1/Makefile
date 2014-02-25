@@ -6,7 +6,7 @@ INCLUDE_PATHS += .
 CFLAGS = -Wall -g -I$(INCLUDE_PATHS)
 LDFLAGS = $(LIBRARIES)
 
-all: testGraph
+all: testGraph testFindCC
 
 %: %.cpp
 	@$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@

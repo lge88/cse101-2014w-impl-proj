@@ -1,5 +1,11 @@
+#ifndef _GRAPH_H_
+#define _GRAPH_H_
+
+
+
 
 #include <iostream>
+#include <sstream>
 #include <vector>
 #include <list>
 #include <map>
@@ -61,7 +67,9 @@ class Graph {
   Graph() {}
 
   Graph(int n, double p) {
+    for (int i = 0; i < n; ++i) {
 
+    }
 
   }
 
@@ -106,4 +114,9 @@ class Graph {
     toDotHelper(vertexVec[0], visited, out);
     out << "}\n";
   }
+
+  int findNumOfCC();
+
 };
+
+#endif /* _GRAPH_H_ */
