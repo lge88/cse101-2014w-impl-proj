@@ -17,12 +17,12 @@ class VertexComp {
 };
 
 void Graph::findCCHelper(Vertex* v, map<int, bool>& visited,
-                         std::vector<int>& out) const {
+                         vector<int>& out) const {
   visited[v->indx] = true;
   out.push_back(v->indx);
 
-  std::list<Edge*>::iterator eit = v->adj.begin();
-  std::list<Edge*>::iterator en = v->adj.end();
+  list<Edge*>::iterator eit = v->adj.begin();
+  list<Edge*>::iterator en = v->adj.end();
 
   while (eit != en) {
     Edge* edge = *eit;
@@ -36,14 +36,14 @@ void Graph::findCCHelper(Vertex* v, map<int, bool>& visited,
   }
 }
 
-std::vector<std::vector<int> > Graph::findCCs() const {
-  std::vector<std::vector<int> > res;
+vector<vector<int> > Graph::findCCs() const {
+  vector<vector<int> > res;
   map<int, bool> visited;
 
   for (size_t i = 0, len = vertexVec.size(); i < len; ++i) {
     Vertex* u = vertexVec[i];
     if (!visited[u->indx]) {
-      std::vector<int> out;
+      vector<int> out;
       findCCHelper(u, visited, out);
       res.push_back(out);
     }
@@ -51,15 +51,23 @@ std::vector<std::vector<int> > Graph::findCCs() const {
   return res;
 }
 
-Graph Graph::findMST(const std::string& name) {
-  int vid = vertexMap[name];
+Graph Graph::findMST(const string& name) const {
+  int vid = vertexMap.at(name);
   Vertex* s = vertexVec[vid];
-  return findMST(s);
+  Graph mst;
+  double cost;
+
+  map<int, bool> visited;
+  vector<int> vids;
+  findCCHelper(s, visited, vids);
+
+  findMST(s, vids, mst, cost);
+  return mst;
 }
 
-std::ostream& operator<<(std::ostream& out, const set<Vertex*, VertexComp>& s) {
-  std::set<Vertex*, VertexComp>::const_iterator sit = s.begin();
-  std::set<Vertex*, VertexComp>::const_iterator en = s.end();
+ostream& operator<<(ostream& out, const set<Vertex*, VertexComp>& s) {
+  set<Vertex*, VertexComp>::const_iterator sit = s.begin();
+  set<Vertex*, VertexComp>::const_iterator en = s.end();
   while (sit != en) {
     out << (*sit)->getName() << " ";
     out << (*sit)->getKey() << " ";
@@ -68,15 +76,21 @@ std::ostream& operator<<(std::ostream& out, const set<Vertex*, VertexComp>& s) {
   return out;
 }
 
-Graph Graph::findMST(Vertex* s) {
-  Graph mst;
+// findMST using Prim's algorthtm.
+// Input:
+//   s: start vertex
+//   vids: the vertex ids of the connected component
+//         that contains s
+// Output:
+//   mst: the MST as a graph
+//   totalCost: total edge cost of the MST.
+void Graph::findMST(Vertex* s, const vector<int>& vids,
+                    Graph& mst, double& totalCost) const {
+
+  // Use std::set(RB-tree) as a priority queue.
   set<Vertex*, VertexComp> q;
 
-  std::vector<int> vids;
-  map<int, bool> visited;
-  findCCHelper(s, visited, vids);
-
-  // Edge weight is from 0 to 1, so 10.0 can be
+  // Edge weight is from 0.0 to 1.0, so 10.0 can be
   // used as "infinity".
   double inf = 10.0;
   for (size_t i = 0, len = vids.size(); i < len; ++i) {
@@ -84,7 +98,7 @@ Graph Graph::findMST(Vertex* s) {
     u->setPrev(-1);
     u->setKey(inf);
 
-    // std::set do not allow duplicate keys
+    // set do not allow duplicate keys
     inf += 0.1;
   }
 
@@ -95,6 +109,7 @@ Graph Graph::findMST(Vertex* s) {
     q.insert(u);
   }
 
+  totalCost = 0.0;
   while (q.size() > 0) {
     set<Vertex*, VertexComp>::iterator sit = q.begin();
     Vertex* u = *sit;
@@ -103,22 +118,25 @@ Graph Graph::findMST(Vertex* s) {
 
     mst.addVertex(u->name);
 
-    if (u->getPrev() != -1) {
-      Vertex* prev = vertexVec[u->getPrev()];
-      std::list<Edge*>::iterator eit = u->adj.begin();
-      std::list<Edge*>::iterator en = u->adj.end();
+    int previ = u->getPrev();
+    if (previ != -1) {
+      Vertex* prev = vertexVec[previ];
+      list<Edge*>::iterator eit = u->adj.begin();
+      list<Edge*>::iterator en = u->adj.end();
       while (eit != en) {
-        if ((*eit)->otherEnd(u->indx) == u->getPrev())
+        if ((*eit)->otherEnd(u->indx) == previ)
           break;
         ++eit;
       }
 
+      totalCost += (*eit)->cost;
       mst.addEdge(u->name, prev->name, (*eit)->cost);
+      // TODO: somehow update diameter here?
+
     }
 
-
-    std::list<Edge*>::iterator eit = u->adj.begin();
-    std::list<Edge*>::iterator en = u->adj.end();
+    list<Edge*>::iterator eit = u->adj.begin();
+    list<Edge*>::iterator en = u->adj.end();
 
     while (eit != en) {
       Edge* edge = *eit;
@@ -134,18 +152,49 @@ Graph Graph::findMST(Vertex* s) {
       ++eit;
     }
   }
+}
 
-  return mst;
+Graph::MSTState Graph::calcAvgMSTState() const {
+  vector<vector<int> > ccs = findCCs();
+  int nccs = ccs.size();
+
+  Graph::MSTState res;
+
+  for (int i = 0; i < nccs; ++i) {
+    const vector<int>& vertIds = ccs[i];
+    Vertex* u = getVertexByIndex(vertIds[0]);
+
+    double totalCost = 0.0;
+    Graph mst;
+    findMST(u, vertIds, mst, totalCost);
+
+    res.cost += totalCost;
+    res.diameter += mst.calcDiameter();
+  }
+
+  res.cost = res.cost/nccs;
+  res.diameter = res.diameter/nccs;
+  res.nccs = nccs;
+
+  return res;
 }
 
 
-vector<Graph> Graph::findMSTs() {
-  // vector<Vertex*> sources = findCCs();
-  vector<Graph> msts;
-  // for (size_t i = 0, len = sources.size(); i < len; ++i) {
-    // msts.push_back(findMST(sources[i]));
-  // }
-  return msts;
+// TODO:
+int Graph::calcDiameter() const {
+  return 0;
 }
+
+int Graph::getNumOfCCs() const {
+  return findCCs().size();
+}
+
+vector<Graph> Graph::findMSTs() const {
+  vector<Graph> out;
+  // TODO:
+
+
+  return out;
+};
 
 #endif /* _GRAPH.FINDMST_H_ */

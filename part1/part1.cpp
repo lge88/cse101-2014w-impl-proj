@@ -10,33 +10,52 @@
 
 using namespace std;
 
-int numOfCCs(const Graph& g) {
-  return g.findCCs().size();
-}
+struct Measurements {
+  double avgNumOfCCs;
+  double stdevNumOfCCs;
+  double avgMSTCost;
+  double avgMSTDiameter;
+ public:
+  Measurements() :
+      avgNumOfCCs(0.0), stdevNumOfCCs(0.0),
+      avgMSTCost(0.0), avgMSTDiameter(0.0) {}
+};
 
 // Input: n - num of vertices, p - edge possibility, k - repeat k times
-// Output: avg - average, stdev - standart deviation
-void runOneCase(int n, double p, int k, double& avg, double& stdev) {
+// Output: Measuremens struct with each field init to zero.
+void calcMeasurements(int n, double p, int k, Measurements& m) {
   vector<int> nums;
+  vector<double> costs;
+  vector<int> diameters;
+
   for (int i = 0; i < k; ++i) {
     Graph g(n, p);
-    int nccs = numOfCCs(g);
-    nums.push_back(nccs);
+    Graph::MSTState s = g.calcAvgMSTState();
+    nums.push_back(s.nccs);
+    costs.push_back(s.cost);
+    diameters.push_back(s.diameter);
   }
 
-  avg = 0.0;
   for (int i = 0; i < k; ++i) {
-    avg += nums[i];
+    m.avgNumOfCCs += nums[i];
+    m.avgMSTCost += costs[i];
+    m.avgMSTDiameter += diameters[i];
   }
-  avg = avg/k;
 
-  stdev = 0.0;
+  m.avgNumOfCCs = m.avgNumOfCCs/k;
+  m.avgMSTCost = m.avgMSTCost/k;
+  m.avgMSTDiameter = m.avgMSTDiameter/k;
+
   for (int i = 0; i < k; ++i) {
-    stdev += (nums[i]-avg)*(nums[i]-avg);
+    m.stdevNumOfCCs += (nums[i]-m.avgNumOfCCs)*(nums[i]-m.avgNumOfCCs);
   }
-  stdev = sqrt(stdev/k);
+  m.stdevNumOfCCs = sqrt(m.stdevNumOfCCs/k);
 }
 
+
+// Usage: ./part1 100 300
+// Output: columns for left to right: n, p, avgNumOfCCs, stdevNumOfCCs,
+//         avgMSTCost, avgMSTDiameter
 int main(int argc, char* argv[]) {
   int n = 20, k = 300;
   if (argc > 1)
@@ -47,12 +66,14 @@ int main(int argc, char* argv[]) {
 
   double p = 0.00;
   while (p <= 1.01) {
-    double avg, stdev;
-    runOneCase(n, p, k, avg, stdev);
+    Measurements m;
+    calcMeasurements(n, p, k, m);
     cout << setw(4) << n;
     cout << setw(6) << p;
-    cout << setw(12) << avg;
-    cout << setw(12) << stdev;
+    cout << setw(12) << m.avgNumOfCCs;
+    cout << setw(12) << m.stdevNumOfCCs;
+    cout << setw(12) << m.avgMSTCost;
+    cout << setw(12) << m.avgMSTDiameter;
     cout << "\n";
     p += 0.02;
   }
