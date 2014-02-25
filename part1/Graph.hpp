@@ -164,13 +164,13 @@ class Graph {
     out << "}\n";
   }
 
-  std::vector<std::vector<int> > findCCs();
+  std::vector<std::vector<int> > findCCs() const;
   std::vector<Graph> findMSTs();
   Graph findMST(Vertex*);
   Graph findMST(const std::string&);
 
  private:
-  void findCCHelper(Vertex*, std::map<int, bool>&, std::vector<int>&);
+  void findCCHelper(Vertex*, std::map<int, bool>&, std::vector<int>&) const;
 
 };
 

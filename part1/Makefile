@@ -1,12 +1,13 @@
-CC = clang++
+# CC = clang++
+CC = g++
 
 LIBRARIES +=
 INCLUDE_PATHS += .
 
-CFLAGS = -Wall -g -I$(INCLUDE_PATHS)
+CFLAGS = -Wall -g -I$(INCLUDE_PATHS) -std=c++0x
 LDFLAGS = $(LIBRARIES)
 
-all: testGraph testFindCC testFindMST testRandomGraph
+all: testGraph testFindCC testFindMST testRandomGraph part1
 
 %: %.cpp
 	@$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@

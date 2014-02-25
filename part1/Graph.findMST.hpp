@@ -17,7 +17,7 @@ class VertexComp {
 };
 
 void Graph::findCCHelper(Vertex* v, map<int, bool>& visited,
-                         std::vector<int>& out) {
+                         std::vector<int>& out) const {
   visited[v->indx] = true;
   out.push_back(v->indx);
 
@@ -36,7 +36,7 @@ void Graph::findCCHelper(Vertex* v, map<int, bool>& visited,
   }
 }
 
-std::vector<std::vector<int> > Graph::findCCs() {
+std::vector<std::vector<int> > Graph::findCCs() const {
   std::vector<std::vector<int> > res;
   map<int, bool> visited;
 
