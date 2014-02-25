@@ -28,7 +28,6 @@ void runOneCase(int n, double p, int k, double& avg, double& stdev) {
   for (int i = 0; i < k; ++i) {
     avg += nums[i];
   }
-  cout << "avg: " << avg << endl;
   avg = avg/k;
 
   stdev = 0.0;
@@ -39,7 +38,7 @@ void runOneCase(int n, double p, int k, double& avg, double& stdev) {
 }
 
 int main(int argc, char* argv[]) {
-  int n = 10, k = 100;
+  int n = 20, k = 300;
   if (argc > 1)
     n = atoi(argv[1]);
 
@@ -50,10 +49,11 @@ int main(int argc, char* argv[]) {
   while (p <= 1.01) {
     double avg, stdev;
     runOneCase(n, p, k, avg, stdev);
-    cout << p << "  ";
-    cout << avg << " ";
-    cout << stdev ;
-    cout << endl;
+    cout << setw(4) << n;
+    cout << setw(6) << p;
+    cout << setw(12) << avg;
+    cout << setw(12) << stdev;
+    cout << "\n";
     p += 0.02;
   }
 }

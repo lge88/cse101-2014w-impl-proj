@@ -9,6 +9,8 @@
 #include <limits>
 #include <cstdlib>
 #include <ctime>
+#include <chrono>
+#include <random>
 
 class Edge {
   friend class Graph;
@@ -33,7 +35,7 @@ class Vertex {
   std::string name;
   std::list<Edge*> adj;
   int indx;
-  double dist;
+  // double dist;
   int prev;
   double scratch;
   Vertex(std::string nm, int i) : name(nm), indx(i) { }
@@ -47,7 +49,7 @@ class Vertex {
 };
 
 double random0To1() {
-  return 1.0 * random() / std::numeric_limits<int>::max();
+  return 1.0 * random() / std::numeric_limits<unsigned int>::max();
 }
 
 std::string itoa(int i) {
@@ -66,7 +68,10 @@ class Graph {
   Graph() {}
 
   Graph(int n, double p) {
-    srand(time(0));
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+    std::default_random_engine generator (seed);
+
+    std::uniform_real_distribution<double> distribution (0.0, 1.0);
 
     // Generate vertices:
     for (int i = 0; i < n; ++i) {
@@ -76,7 +81,7 @@ class Graph {
     // Generate edges:
     for (int i = 0; i < n; ++i) {
       for (int j = i + 1; j < n; ++j) {
-        double q = random0To1();
+        double q = distribution(generator);
         if (q < p) {
           std::string u = "V" + itoa(i);
           std::string v = "V" + itoa(j);
@@ -87,7 +92,7 @@ class Graph {
 
     // TODO: Assign edge weights:
     for (size_t i = 0, len = edgeVec.size(); i < len; ++i) {
-      edgeVec[i]->cost = random0To1();
+      edgeVec[i]->cost = distribution(generator);
     }
 
   }
