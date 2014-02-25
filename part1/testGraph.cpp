@@ -12,13 +12,13 @@ int main() {
   g.addVertex("D");
   g.addVertex("E");
 
-  g.addUndirectedEdge("A", "B");
-  g.addUndirectedEdge("A", "C");
-  g.addUndirectedEdge("B", "C");
-  g.addUndirectedEdge("B", "D");
-  g.addUndirectedEdge("C", "D");
-  g.addUndirectedEdge("A", "E");
-  g.addUndirectedEdge("C", "E");
+  g.addEdge("A", "B", 1.0);
+  g.addEdge("A", "C", 3.0);
+  g.addEdge("B", "C", 5.0);
+  g.addEdge("B", "D", 6.0);
+  g.addEdge("C", "D", 7.0);
+  g.addEdge("A", "E", 2.0);
+  g.addEdge("C", "E", 4.0);
 
   g.toDot(cout);
 }

@@ -10,16 +10,6 @@
 #include <cstdlib>
 #include <ctime>
 
-// class Edge {
-//   friend class Graph;
-//   friend class Vertex;
-//  private:
-//   int src;
-//   int dest;
-//   double cost;
-//   Edge(int s, int d, double c = 1.0) : src(s), dest(d), cost(c) {}
-// };
-
 class Edge {
   friend class Graph;
   friend class Vertex;
@@ -45,20 +35,19 @@ class Vertex {
   int indx;
   double dist;
   int prev;
-  int scratch;
+  double scratch;
   Vertex(std::string nm, int i) : name(nm), indx(i) { }
-  ~Vertex() {
-    std::list<Edge*>::iterator it = adj.begin();
-    while(it != adj.end()) { delete *it; ++it; }
-  }
+ public:
+  double getKey() { return scratch; }
+  void setKey(double k) { scratch = k; }
 };
 
 double random0To1() {
-  return random() / numeric_limits<int>::max();
+  return random() / std::numeric_limits<int>::max();
 }
 
 std::string itoa(int i) {
-  stringstream ss;
+  std::stringstream ss;
   ss << i;
   return ss.str();
 }
@@ -68,28 +57,6 @@ class Graph {
   std::map<std::string,int> vertexMap;
   std::vector<Vertex*> vertexVec;
   std::vector<Edge*> edgeVec;
-
-  void toDotHelper(Vertex* v, std::map<int, bool>& visited, std::ostream& out) {
-    visited[v->indx] = true;
-
-    out << "  " << v->indx << " [label=\"";
-    out << v->name;
-    out << "\"]\n";
-
-    std::list<Edge*>& adj = v->adj;
-    std::list<Edge*>::iterator it = adj.begin();
-    std::list<Edge*>::iterator en = adj.end();
-
-    while (it != en) {
-      Vertex* u = vertexVec[(*it)->dest];
-      if (!visited[u->indx]) {
-        out << "  " << v->indx;
-        out << " -- " << u->indx << "\n";
-        toDotHelper(u, visited, out);
-      }
-      ++it;
-    }
-  }
 
  public:
   Graph() {}
@@ -109,12 +76,12 @@ class Graph {
         if (q < p) {
           std::string u = "V" + itoa(i);
           std::string v = "V" + itoa(j);
-          addUndirectedEdge(u, v);
+          addEdge(u, v);
         }
       }
     }
 
-    // Assign edge weights:
+    // TODO: Assign edge weights:
 
 
   }
@@ -124,6 +91,11 @@ class Graph {
     while(it != vertexVec.end()) {
       delete *it;
       ++it;
+    }
+    std::vector<Edge*>::iterator eit = edgeVec.begin();
+    while(eit != edgeVec.end()) {
+      delete *eit;
+      ++eit;
     }
   }
 
@@ -144,10 +116,6 @@ class Graph {
     int desti = getVertexIndex(dest);
     if(srci < 0 || desti < 0) return false;
 
-    // std::list<Edge*> & adj = vertexVec[srci]->adj;
-    // adj.push_back(new Edge(srci,desti,coutt));
-
-
     Edge* edge = new Edge(srci, desti, coutt);
     edgeVec.push_back(edge);
 
@@ -157,14 +125,7 @@ class Graph {
     std::list<Edge*>& adj2 = vertexVec[desti]->adj;
     adj2.push_back(edge);
 
-
     return true;
-  }
-
-  bool addUndirectedEdge(std::string src, std::string dest, double coutt = 1.0) {
-    bool ok = addEdge(src, dest, coutt);
-    ok = ok && addEdge(dest, src, coutt);
-    return ok;
   }
 
   int getVertexIndex(std::string vname) {
@@ -178,13 +139,32 @@ class Graph {
 
     std::map<int, bool> visited;
     out << "graph g {\n";
-    toDotHelper(vertexVec[0], visited, out);
+
+    std::vector<Vertex*>::iterator vit = vertexVec.begin();
+    while(vit != vertexVec.end()) {
+      out << "  " << (*vit)->indx << " [label=\"";
+      out << (*vit)->name;
+      out << "\"]\n";
+      ++vit;
+    }
+
+    std::vector<Edge*>::iterator eit = edgeVec.begin();
+    while(eit != edgeVec.end()) {
+      out << "  " << (*eit)->src;
+      out << " -- " << (*eit)->dest;
+      out << " [label=\"" << (*eit)->cost << "\"]\n";
+      ++eit;
+    }
     out << "}\n";
   }
 
-  std::vector<Vertex*> findCCs();
+  // std::vector<Vertex*> findCCs();
+  std::vector<std::vector<int> > findCCs();
+  std::vector<Graph> findMSTs();
   Graph findMST(Vertex*);
-  std::vector<Graph> findMSTs(Vertex*);
+
+ private:
+  void findCCHelper(Vertex*, std::map<int, bool>&, std::vector<int>&);
 
 };
 
