@@ -4,11 +4,6 @@
 
 using namespace std;
 
-void addUndirectedEdge(Graph& g, const string& u, const string& v, double w = 1.0) {
-  g.addEdge(u, v, w);
-  g.addEdge(v, u, w);
-}
-
 int main() {
   Graph g;
   g.addVertex("A");
@@ -17,14 +12,13 @@ int main() {
   g.addVertex("D");
   g.addVertex("E");
 
-  addUndirectedEdge(g, "A", "B");
-  addUndirectedEdge(g, "A", "C");
-  addUndirectedEdge(g, "B", "C");
-  addUndirectedEdge(g, "B", "D");
-  addUndirectedEdge(g, "C", "D");
-  addUndirectedEdge(g, "A", "E");
-  addUndirectedEdge(g, "C", "E");
-
+  g.addUndirectedEdge("A", "B");
+  g.addUndirectedEdge("A", "C");
+  g.addUndirectedEdge("B", "C");
+  g.addUndirectedEdge("B", "D");
+  g.addUndirectedEdge("C", "D");
+  g.addUndirectedEdge("A", "E");
+  g.addUndirectedEdge("C", "E");
 
   g.toDot(cout);
 }
