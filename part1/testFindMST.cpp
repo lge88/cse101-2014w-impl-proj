@@ -3,9 +3,15 @@
 #include <vector>
 
 #include "Graph.hpp"
-#include "Graph.findMST.hpp"
+#include "Graph.algo.hpp"
 
 using namespace std;
+
+enum Option {
+  IN = 0,
+  OUT,
+  COST
+};
 
 std::ostream& operator<<(std::ostream& out, const vector<vector<int> >& v) {
   for (int i = 0, len = v.size(); i < len; ++i) {
@@ -70,9 +76,60 @@ void testFindMST() {
   Graph mst = g.findMST("A");
   mst.toDot(cout);
 
+  cout << "cost: " << g.calcMSTCost("A") << endl;
+
 }
 
-int main() {
+
+void testFindMST2(Option opt) {
+  Graph g;
+  g.addVertex("a");
+  g.addVertex("b");
+  g.addVertex("c");
+  g.addVertex("d");
+  g.addVertex("e");
+  g.addVertex("f");
+  g.addVertex("g");
+  g.addVertex("h");
+  g.addVertex("i");
+
+  g.addEdge("a", "b", 0.40);
+  g.addEdge("a", "h", 0.80);
+  g.addEdge("b", "c", 0.80);
+  g.addEdge("b", "h", 1.10);
+  g.addEdge("c", "d", 0.70);
+  g.addEdge("c", "f", 0.40);
+  g.addEdge("c", "i", 0.20);
+  g.addEdge("d", "e", 0.90);
+  g.addEdge("d", "f", 1.40);
+  g.addEdge("e", "f", 1.00);
+  g.addEdge("f", "g", 0.20);
+  g.addEdge("g", "h", 0.10);
+  g.addEdge("g", "i", 0.60);
+  g.addEdge("h", "i", 0.70);
+
+  if (opt == OUT) {
+    g.toDot(cout);
+  } else if (opt == IN) {
+    Graph mst = g.findMST("a");
+    mst.toDot(cout);
+  } else if (opt == COST) {
+    // double cost = g.calcMSTCost("a");
+    // cout << cost << endl;
+    cout << g.calcAvgMSTState().cost << endl;
+  }
+}
+
+int main(int argc, char* argv[]) {
   // testFindCCs();
-  testFindMST();
+  // testFindMST();
+  Option opt = OUT;
+  if (argc > 1) {
+    if (string(argv[1]) == "in") {
+      opt = IN;
+    } else if (string(argv[1]) == "cost") {
+      opt = COST;
+    }
+  }
+  testFindMST2(opt);
 }

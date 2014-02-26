@@ -1,7 +1,8 @@
 
 #include <iostream>
 
-#include "Graph.findcc.hpp"
+#include "Graph.hpp"
+#include "Graph.algo.hpp"
 
 using namespace std;
 
@@ -26,5 +27,5 @@ int main() {
   addUndirectedEdge(g, "A", "E");
   addUndirectedEdge(g, "C", "E");
 
-  cout << "Num of cc: " << g.findNumOfCC() << endl;
+  cout << "Num of cc: " << g.getNumOfCCs() << endl;
 }

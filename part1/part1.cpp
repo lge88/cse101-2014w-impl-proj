@@ -3,10 +3,11 @@
 #include <iomanip>
 #include <vector>
 #include <cmath>
+#include <ctime>
 #include <cstdlib>
 
 #include "Graph.hpp"
-#include "Graph.findMST.hpp"
+#include "Graph.algo.hpp"
 
 using namespace std;
 
@@ -64,17 +65,36 @@ int main(int argc, char* argv[]) {
   if (argc > 2)
     k = atoi(argv[2]);
 
+
+  cout << "#";
+  cout << setw(3) << "n";
+  cout << setw(4) << "k";
+  cout << setw(6) << "p";
+  cout << setw(15) << "avgNumOfCCs";
+  cout << setw(15) << "stdevNumOfCCs";
+  cout << setw(15) << "avgMSTCost";
+  cout << setw(15) << "avgMSTDiameter";
+  cout << "\n";
+
+  clock_t start;
+  double duration;
+  start = clock();
+
   double p = 0.00;
   while (p <= 1.01) {
     Measurements m;
     calcMeasurements(n, p, k, m);
     cout << setw(4) << n;
+    cout << setw(4) << k;
     cout << setw(6) << p;
-    cout << setw(12) << m.avgNumOfCCs;
-    cout << setw(12) << m.stdevNumOfCCs;
-    cout << setw(12) << m.avgMSTCost;
-    cout << setw(12) << m.avgMSTDiameter;
-    cout << "\n";
+    cout << setw(15) << m.avgNumOfCCs;
+    cout << setw(15) << m.stdevNumOfCCs;
+    cout << setw(15) << m.avgMSTCost;
+    cout << setw(15) << m.avgMSTDiameter;
+    cout << endl;
     p += 0.02;
   }
+
+  duration = (clock() - start) / (double) CLOCKS_PER_SEC;
+  cout<<"# time: "<< duration << endl;
 }

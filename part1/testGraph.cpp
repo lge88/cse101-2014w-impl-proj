@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "Graph.hpp"
+#include "Graph.algo.hpp"
 
 using namespace std;
 

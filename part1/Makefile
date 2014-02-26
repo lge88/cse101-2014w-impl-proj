@@ -1,5 +1,5 @@
-# CC = clang++
-CC = g++
+CC = clang++
+# CC = g++
 
 LIBRARIES +=
 INCLUDE_PATHS += .
@@ -7,13 +7,25 @@ INCLUDE_PATHS += .
 CFLAGS = -Wall -g -I$(INCLUDE_PATHS) -std=c++11
 LDFLAGS = $(LIBRARIES)
 
-all: testGraph testFindCC testFindMST testRandomGraph part1
+EXES += testGraph
+EXES += testFindMST
+EXES += testFindCC
+EXES += testRandomGraph
+EXES += part1
+
+all: $(EXES)
 
 %: %.cpp
-	@$(CC) $(CFLAGS) $(LDFLAGS) $< -o $@
+	$(CC) $(LDLAGS) $< -o $@
+
+testGraph: Graph.hpp Graph.algo.hpp
+testFindMST: Graph.hpp Graph.algo.hpp
+testFindCC: Graph.hpp Graph.algo.hpp
+testRandomGraph: Graph.hpp Graph.algo.hpp
+part1: Graph.hpp Graph.algo.hpp
 
 touch:
 	touch -c *.cpp
 
 clean:
-	rm -fr $(OUT) *.dSYM *.o
+	rm -fr $(EXES) *.dSYM *.o
