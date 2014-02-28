@@ -1,5 +1,5 @@
-#ifndef _GRAPH_H_
-#define _GRAPH_H_
+#ifndef _LIST_GRAPH_H_
+#define _LIST_GRAPH_H_
 
 #include <iostream>
 #include <sstream>
@@ -13,7 +13,7 @@
 #include <random>
 
 class Edge {
-  friend class Graph;
+  friend class ListGraph;
   friend class Vertex;
  private:
   int src;
@@ -27,7 +27,7 @@ class Edge {
 };
 
 class Vertex {
-  friend class Graph;
+  friend class ListGraph;
  private:
   std::string name;
   std::list<Edge*> adj;
@@ -38,7 +38,6 @@ class Vertex {
   Vertex(std::string nm, int i) :
       name(nm), indx(i) {}
  public:
-  int getIndx() const { return indx; }
   double getKey() { return scratch; }
   void setKey(double k) { scratch = k; }
   int getPrev() { return prev; }
@@ -48,15 +47,15 @@ class Vertex {
   std::vector<int> getNeighbors();
 };
 
-class Graph {
+class ListGraph {
   // Basic operations. Basic operations are implemented in this header
-  // file Graph.hpp.
+  // file ListGraph.hpp.
  public:
-  Graph() {}
+  ListGraph() {}
   // Random graph constructor. n is the number of vertices, p is edge
   // possibility.
-  Graph(int n, double p);
-  ~Graph();
+  ListGraph(int n, double p);
+  ~ListGraph();
 
   // Mutation methods:
   bool addVertex(const std::string& vertexName);
@@ -75,6 +74,10 @@ class Graph {
   std::vector<Vertex*> getNeighbors(std::string vname) const;
   std::vector<Vertex*> getNeighbors(int uid) const;
   std::vector<Vertex*> getNeighbors(Vertex* u) const;
+
+  std::vector<Edge*> getOutEdges(std::string vname) const;
+  std::vector<Edge*> getOutEdges(int uid) const;
+  std::vector<Edge*> getOutEdges(Vertex* u) const;
 
   bool isAdjacent(const std::string& uname, const std::string& vname) const;
   bool isAdjacent(int uid, int vid) const;
@@ -101,7 +104,7 @@ class Graph {
   std::vector<Edge*> edgeVec;
 
   // Algorithms:
-  // Algorithms are implemented in Graph.algo.hpp.
+  // Algorithms are implemented in ListGraph.algo.hpp.
  public:
   struct MSTState {
     double cost;
@@ -112,8 +115,8 @@ class Graph {
 
   std::vector<std::vector<int> > findCCs() const;
   int getNumOfCCs() const;
-  Graph findMST(const std::string&) const;
-  std::vector<Graph> findMSTs() const;
+  ListGraph findMST(const std::string&) const;
+  std::vector<ListGraph> findMSTs() const;
   double calcMSTCost(const std::string&) const;
   int calcTreeDiameter() const;
   MSTState calcAvgMSTState() const;
@@ -124,7 +127,7 @@ class Graph {
 
 
  private:
-  void findMST(Vertex*, const std::vector<int>&, Graph&, double&) const;
+  void findMST(Vertex*, const std::vector<int>&, ListGraph&, double&) const;
   void findCCHelper(Vertex*, std::map<int, bool>&, std::vector<int>&) const;
 
   class VertexCompByDist {
@@ -173,7 +176,7 @@ std::string itoa(int i) {
   return ss.str();
 }
 
-Graph::Graph(int n, double p) {
+ListGraph::ListGraph(int n, double p) {
   unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
   std::default_random_engine generator (seed);
   std::uniform_real_distribution<double> distribution(0.0, 1.0);
@@ -197,15 +200,15 @@ Graph::Graph(int n, double p) {
 
 }
 
-Graph::~Graph() {
+ListGraph::~ListGraph() {
   clear();
 }
 
-bool Graph::addVertex(int vertexTag) {
+bool ListGraph::addVertex(int vertexTag) {
   return addVertex("V"+itoa(vertexTag));
 }
 
-bool Graph::addVertex(std::string const & vertexName) {
+bool ListGraph::addVertex(std::string const & vertexName) {
   int indx = getVertexIndex(vertexName);
   if (indx >= 0) return false;
   indx = vertexVec.size();
@@ -217,7 +220,7 @@ bool Graph::addVertex(std::string const & vertexName) {
   return true;
 }
 
-bool Graph::addEdge(const std::string& src,
+bool ListGraph::addEdge(const std::string& src,
                     const std::string& dest,
                     double cost) {
   int srci = getVertexIndex(src);
@@ -236,11 +239,11 @@ bool Graph::addEdge(const std::string& src,
   return true;
 }
 
-bool Graph::addEdge(int uTag, int vTag, double cost) {
+bool ListGraph::addEdge(int uTag, int vTag, double cost) {
   return addEdge("V"+itoa(uTag), "V"+itoa(uTag), cost);
 }
 
-void Graph::clear() {
+void ListGraph::clear() {
   std::vector<Vertex*>::iterator it = vertexVec.begin();
   while(it != vertexVec.end()) {
     delete *it;
@@ -256,35 +259,35 @@ void Graph::clear() {
   edgeVec.clear();
 }
 
-int Graph::getVertexIndex(const std::string& vname) const {
+int ListGraph::getVertexIndex(const std::string& vname) const {
   std::map<std::string,int>::const_iterator it = vertexMap.find(vname);
   if(it == vertexMap.end()) return -1;
   return it->second;
 }
 
-Vertex* Graph::getVertex(int index) const {
+Vertex* ListGraph::getVertex(int index) const {
   if (index >=0 && index < vertexVec.size())
     return vertexVec[index];
   return 0;
 }
 
-Vertex* Graph::getVertex(const std::string& vname) const {
+Vertex* ListGraph::getVertex(const std::string& vname) const {
   return getVertex(getVertexIndex(vname));
 }
 
-int Graph::getNumOfVertices() const {
+int ListGraph::getNumOfVertices() const {
   return vertexVec.size();
 }
 
-std::vector<Vertex*> Graph::getNeighbors(std::string vname) const {
+std::vector<Vertex*> ListGraph::getNeighbors(std::string vname) const {
   return getNeighbors(getVertex(vname));
 }
 
-std::vector<Vertex*> Graph::getNeighbors(int uid) const {
+std::vector<Vertex*> ListGraph::getNeighbors(int uid) const {
   return getNeighbors(getVertex(uid));
 }
 
-std::vector<Vertex*> Graph::getNeighbors(Vertex* u) const {
+std::vector<Vertex*> ListGraph::getNeighbors(Vertex* u) const {
   std::vector<Vertex*> nbs;
   if (!u) return nbs;
 
@@ -294,33 +297,33 @@ std::vector<Vertex*> Graph::getNeighbors(Vertex* u) const {
   return nbs;
 }
 
-bool Graph::isAdjacent(
+bool ListGraph::isAdjacent(
     const std::string& uname,
     const std::string& vname) const {
   return isAdjacent(getVertex(uname), getVertex(vname));
 }
 
-bool Graph::isAdjacent(int uid, int vid) const {
+bool ListGraph::isAdjacent(int uid, int vid) const {
   return isAdjacent(getVertex(uid), getVertex(vid));
 }
 
-bool Graph::isAdjacent(Vertex* u, Vertex* v) const {
+bool ListGraph::isAdjacent(Vertex* u, Vertex* v) const {
   return getEdge(u, v) != 0;
 }
 
-int Graph::getNumOfEdges() const {
+int ListGraph::getNumOfEdges() const {
   return edgeVec.size();
 }
 
-Edge* Graph::getEdge(int uid, int vid) const {
+Edge* ListGraph::getEdge(int uid, int vid) const {
   return getEdge(getVertex(uid), getVertex(vid));
 }
 
-Edge* Graph::getEdge(const std::string& uname, const std::string& vname) const {
+Edge* ListGraph::getEdge(const std::string& uname, const std::string& vname) const {
   return getEdge(getVertex(uname), getVertex(vname));
 }
 
-Edge* Graph::getEdge(Vertex* u, Vertex* v) const {
+Edge* ListGraph::getEdge(Vertex* u, Vertex* v) const {
   std::list<Edge*>::iterator eit = u->adj.begin();
   std::list<Edge*>::iterator en = u->adj.end();
   int uid = u->indx;
@@ -334,21 +337,21 @@ Edge* Graph::getEdge(Vertex* u, Vertex* v) const {
   return 0;
 }
 
-double Graph::getEdgeWeight(int uid, int vid) const {
+double ListGraph::getEdgeWeight(int uid, int vid) const {
   return getEdgeWeight(getVertex(uid), getVertex(vid));
 }
 
-double Graph::getEdgeWeight(const std::string& uname,
+double ListGraph::getEdgeWeight(const std::string& uname,
                             const std::string& vname) const {
   return getEdgeWeight(getVertex(uname), getVertex(vname));
 }
 
-double Graph::getEdgeWeight(Vertex* u, Vertex* v) const {
+double ListGraph::getEdgeWeight(Vertex* u, Vertex* v) const {
   Edge* e = getEdge(u, v);
   return e ? e->cost : -1.0;
 }
 
-void Graph::toDot(std::ostream& out) const {
+void ListGraph::toDot(std::ostream& out) const {
   if (vertexVec.size() == 0) return;
 
   std::map<int, bool> visited;
@@ -372,7 +375,7 @@ void Graph::toDot(std::ostream& out) const {
   out << "}\n";
 }
 
-void Graph::fromTxt(std::istream& in) {
+void ListGraph::fromTxt(std::istream& in) {
   clear();
   while (in) {
     int u, v;
@@ -384,7 +387,7 @@ void Graph::fromTxt(std::istream& in) {
   }
 }
 
-void Graph::toTxt(std::ostream& out) const {
+void ListGraph::toTxt(std::ostream& out) const {
   for (size_t i = 0, len = edgeVec.size(); i < len; ++i) {
     Edge* edge = edgeVec[i];
     out << edge->src << " " << edge->dest << " ";
@@ -392,4 +395,4 @@ void Graph::toTxt(std::ostream& out) const {
   }
 }
 
-#endif /* _GRAPH_H_ */
+#endif /* _LIST_GRAPH_H_ */
