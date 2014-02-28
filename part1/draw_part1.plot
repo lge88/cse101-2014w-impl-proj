@@ -3,6 +3,7 @@ set title "n = 100, k = 300"
 set xlabel "p - Edge possibility"
 set ylabel "Average Number of Connected Components"
 set output "results/d1a1_n_100_k_300.eps"
+set style line 1 lt 2 lc rgb "red" lw 3
 plot "results/n_100_k_300.txt" using 3:4
 
 set terminal postscript eps

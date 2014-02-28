@@ -1,35 +1,38 @@
 #include <vector>
+#include <map>
 #include <set>
 #include <queue>
 #include <limits>
 #include <algorithm>
+#include <iostream>
 
 
 using namespace std;
 
-template <typename Graph, typename Vertex, typename Edge>
-void findCCHelper(const Graph& g, Vertex* v, map<int, bool>& visited,
+template <typename Graph>
+void findCCHelper(const Graph& g, typename Graph::Vertex* v, map<int, bool>& visited,
                   vector<int>& out) {
   int vid = v->getIndx();
   visited[vid] = true;
   out.push_back(vid);
 
-  vector<Vertex*> nbs = g.getNeighbors(v);
+  vector<typename Graph::Vertex*> nbs = g.getNeighbors(v);
   for (int i = 0, len = nbs.size(); i < len; ++i) {
+    typename Graph::Vertex* u = nbs[i];
     if (!visited[u->getIndx()]) {
       findCCHelper(u, visited, out);
     }
   }
 }
 
-template <typename Graph, typename Vertex, typename Edge>
+template <typename Graph>
 vector<vector<int> > findCCs(const Graph& g) {
   vector<vector<int> > res;
   map<int, bool> visited;
   int V = g.getNumOfVertices();
 
   for (int i = 0; i < V; ++i) {
-    Vertex* u = g.getVertex(i);
+    typename Graph::Vertex* u = g.getVertex(i);
     if (!visited[u->getIndx()]) {
       vector<int> out;
       findCCHelper(u, visited, out);
@@ -49,11 +52,9 @@ ostream& operator<<(ostream& out, const vector<int>& s) {
   return out;
 }
 
-
-
-Graph Graph::findMST(const string& name) const {
-  int vid = vertexMap.at(name);
-  Vertex* s = vertexVec[vid];
+template <class Graph, class Vertex>
+Graph findMST(const Graph& g, const string& vertexName) {
+  Vertex* s = g.getVertex(vertexName);
   Graph mst;
   double cost;
 
@@ -65,9 +66,10 @@ Graph Graph::findMST(const string& name) const {
   return mst;
 }
 
+template <class Vertex, class VertexComp>
 ostream& operator<<(ostream& out, const set<Vertex*, VertexComp>& s) {
-  set<Vertex*, VertexComp>::const_iterator sit = s.begin();
-  set<Vertex*, VertexComp>::const_iterator en = s.end();
+  typename set<Vertex*, VertexComp>::const_iterator sit = s.begin();
+  typename set<Vertex*, VertexComp>::const_iterator en = s.end();
   while (sit != en) {
     out << "(" << (*sit)->getName() << ", ";
     out << (*sit)->getKey() << ")";
@@ -78,16 +80,14 @@ ostream& operator<<(ostream& out, const set<Vertex*, VertexComp>& s) {
   return out;
 }
 
-
-
-class VertexComp {
- public:
-  bool operator()(Vertex* lhs, Vertex* rhs) const {
-    if (lhs->getKey() == rhs->getKey())
-      return lhs->getName() < rhs->getName();
-    return lhs->getKey() < rhs->getKey();
-  }
-};
+// class VertexComp {
+//  public:
+//   bool operator()(Vertex* lhs, Vertex* rhs) const {
+//     if (lhs->getKey() == rhs->getKey())
+//       return lhs->getName() < rhs->getName();
+//     return lhs->getKey() < rhs->getKey();
+//   }
+// };
 
 // findMST using Prim's algorthtm.
 // Input:
@@ -98,7 +98,7 @@ class VertexComp {
 //   mst: the MST as a graph
 //   totalCost: total edge cost of the MST.
 
-template <typename Graph, typename Vertex, typename Edge>
+template <typename Graph>
 void findMST(const Graph& g, Vertex* s, const vector<int>& vids,
              Graph& mst, double& totalCost) {
 // void Graph::findMST(Vertex* s, const vector<int>& vids,
@@ -116,7 +116,7 @@ void findMST(const Graph& g, Vertex* s, const vector<int>& vids,
       return weights.at(uid) < weights.at(vid);
     }
    private:
-    map<int, double>& weights;
+    const map<int, double>& weights;
   } comp(weights);
 
   // Use std::set(RB-tree) as a priority queue.
@@ -129,7 +129,7 @@ void findMST(const Graph& g, Vertex* s, const vector<int>& vids,
     prevs[vids[i]] = -1;
   }
 
-  weigths[s->getIndx()] = 0.0;
+  weights[s->getIndx()] = 0.0;
 
   for (size_t i = 0, len = vids.size(); i < len; ++i) {
     Vertex* u = g.getVertex(vids[i]);
@@ -143,7 +143,7 @@ void findMST(const Graph& g, Vertex* s, const vector<int>& vids,
   while (q.size() > 0) {
     // cout << q << endl;
 
-    set<Vertex*, VertexCompByEdgeWeight>::iterator sit = q.begin();
+    typename set<Vertex*, VertexCompByEdgeWeight>::iterator sit = q.begin();
     Vertex* u = *sit;
 
     q.erase(sit);
@@ -154,52 +154,59 @@ void findMST(const Graph& g, Vertex* s, const vector<int>& vids,
 
     // TODO: not finish yet...
     if (previ != -1) {
-      Vertex* prev = g.getVertex[previ];
+      Vertex* prev = g.getVertex(previ);
       Edge* e = g.getEdge(u, prev);
 
-      totalCost += e->cost;
-      mst.addEdge(u->name, prev->name, e->cost);
+      totalCost += e->getCost();
+      mst.addEdge(u->getName(), prev->getName(), e->getCost());
       // TODO: somehow update diameter here?
 
     }
 
-    list<Edge*>::iterator eit = u->adj.begin();
-    list<Edge*>::iterator en = u->adj.end();
+    vector<Edge*> edges = g.getEdges(u);
 
-    while (eit != en) {
-      Edge* edge = *eit;
-      int vid = edge->otherEnd(u->indx);
-      Vertex* v = vertexVec[vid];
+    for (int i = 0, len = edges.size(); i < len; ++i) {
+      Edge* e = edges[i];
+      int vid = e->otherEnd(u->getIndx());
+      Vertex* v = g.getVertex(vid);
 
-      if (q.count(v) > 0 && edge->cost < v->getKey()) {
+      if (q.count(v) > 0 && e->getCost() < weights[v->getIndx()] ) {
         q.erase(v);
-        v->setKey(edge->cost);
-        v->setPrev(u->indx);
+        weights[v->getIndx()] = e->getCost();
+        prevs[v->getIndx()] = u->getIndx();
         q.insert(v);
       }
-      ++eit;
     }
+
   }
   // cout << "q after loop:\n";
   // cout << q << endl;
 }
 
-Graph::MSTState Graph::calcAvgMSTState() const {
-  vector<vector<int> > ccs = findCCs();
+struct MSTState {
+  double cost;
+  double diameter;
+  int nccs;
+  MSTState() : cost(0.0), diameter(0.0), nccs(0) {}
+};
+
+template <typename Graph>
+MSTState calcAvgMSTState(const Graph& g) {
+  vector<vector<int> > ccs = findCCs(g);
   int nccs = ccs.size();
 
-  Graph::MSTState res;
+  MSTState res;
 
   for (int i = 0; i < nccs; ++i) {
     const vector<int>& vertIds = ccs[i];
-    Vertex* u = getVertex(vertIds[0]);
+    Vertex* u = g.getVertex(vertIds[0]);
 
     double totalCost = 0.0;
     Graph mst;
-    findMST(u, vertIds, mst, totalCost);
+    findMST(g, u, vertIds, mst, totalCost);
 
     res.cost += totalCost;
-    res.diameter += mst.calcTreeDiameter();
+    res.diameter += calcTreeDiameter(mst);
   }
 
   res.cost = res.cost/nccs;
@@ -209,17 +216,18 @@ Graph::MSTState Graph::calcAvgMSTState() const {
   return res;
 }
 
-double Graph::calcMSTCost(const std::string& name) const {
-  int vid = vertexMap.at(name);
-  Vertex* s = vertexVec[vid];
+template <class Graph>
+double calcMSTCost(const Graph& g, const std::string& name) {
+
+  Vertex* s = g.getVertex(name);
   Graph mst;
   double cost;
 
   map<int, bool> visited;
   vector<int> vids;
-  findCCHelper(s, visited, vids);
+  findCCHelper(g, s, visited, vids);
 
-  findMST(s, vids, mst, cost);
+  findMST(g, s, vids, mst, cost);
   return cost;
 }
 
@@ -227,11 +235,13 @@ double Graph::calcMSTCost(const std::string& name) const {
 // Using the algorithm from:
 // http://algs4.cs.princeton.edu/41undirected/
 // Item 26
-int Graph::calcTreeDiameter() const {
-  if (getNumOfVertices() == 0) return 0;
+template <class Graph>
+int calcTreeDiameter(const Graph& g) {
 
-  Vertex* v = vertexVec[0];
-  vector<int> dist = bfsSP(v);
+  if (g.getNumOfVertices() == 0) return 0;
+
+  Vertex* v = g.getVertex(0);
+  vector<int> dist = bfsSP(g, v);
 
   int wi = 0;
   int d = -1;
@@ -243,7 +253,7 @@ int Graph::calcTreeDiameter() const {
     }
   }
 
-  Vertex* w = getVertex(wi);
+  Vertex* w = g.getVertex(wi);
   dist = bfsSP(w);
 
   d = -1;
@@ -254,45 +264,62 @@ int Graph::calcTreeDiameter() const {
   return d;
 }
 
-int Graph::getNumOfCCs() const {
-  return findCCs().size();
+template <class Graph>
+int getNumOfCCs(const Graph& g) {
+  return findCCs(g).size();
 }
 
-vector<Graph> Graph::findMSTs() const {
-  vector<Graph> out;
-  // TODO:
+
+// vector<Graph> Graph::findMSTs() const {
+//   vector<Graph> out;
+//   // TODO:
 
 
-  return out;
+//   return out;
+// };
+
+template<class V>
+class VertexCompByDist {
+  const std::vector<double>& dist;
+ public:
+  VertexCompByDist(const std::vector<double>& d) : dist(d) {}
+  bool operator()(const V*& lhs, const V*& rhs) const {
+    if (dist[lhs->getIndx()] == dist[rhs->getIndx()])
+      return lhs->getName() < rhs->getName();
+    return dist[lhs->getIndx()] < dist[rhs->getIndx()];
+  }
 };
 
-vector<double> Graph::dijsktraSP(Vertex* s) const {
-  vector<double> dist;
-  VertexCompByDist comp(dist);
-  set<Vertex*, VertexCompByDist> q(comp);
+template <class Graph>
+vector<double> dijsktraSP(const Graph& g, Graph::Vertex* s) {
 
-  int V = getNumOfVertices();
+  vector<double> dist;
+
+  VertexCompByDist<Vertex> comp(dist);
+  set<Vertex*, VertexCompByDist<Vertex> > q(comp);
+
+  int V = g.getNumOfVertices();
   for (int i = 0; i < V; ++i) {
     dist.push_back(numeric_limits<double>::max());
   }
 
-  dist[s->indx] = 0.0;
+  dist[s->getIndx()] = 0.0;
 
   for (int i = 0; i < V; ++i)
-    q.insert(vertexVec[i]);
+    q.insert(g.getVertex(i));
 
   while (!q.empty()) {
-    set<Vertex*, VertexCompByDist>::iterator it = q.begin();
+    typename set<Vertex*, VertexCompByDist<Vertex> >::iterator it = q.begin();
     Vertex* u = *it;
     q.erase(it);
 
-    vector<Vertex*> nbs = getNeighbors(u);
+    vector<Vertex*> nbs = g.getNeighbors(u);
     for (int i = 0, len = nbs.size(); i < len; ++i) {
       Vertex* v = nbs[i];
       double w = getEdgeWeight(u, v);
-      if (dist[v->indx] > dist[u->indx] + w) {
+      if (dist[v->getIndx()] > dist[u->getIndx()] + w) {
         q.erase(v);
-        dist[v->indx] = dist[u->indx] + w;
+        dist[v->getIndx()] = dist[u->getIndx()] + w;
         q.insert(v);
       }
     }
@@ -301,19 +328,21 @@ vector<double> Graph::dijsktraSP(Vertex* s) const {
   return dist;
 }
 
-vector<double> Graph::dijsktraSP(const string& uname) const {
-  return dijsktraSP(getVertex(uname));
+template <class Graph>
+vector<double> dijsktraSP(const Graph& g, const string& uname) {
+  return dijsktraSP(g.getVertex(uname));
 }
 
-vector<int> Graph::bfsSP(Vertex* s) const {
+template <class Graph, class Vertex>
+vector<int> bfsSP(const Graph& g, Vertex* s) {
   vector<int> dist;
-  int V = getNumOfVertices();
+  int V = g.getNumOfVertices();
   int inf = numeric_limits<int>::max();
   for (int i = 0; i < V; ++i) {
     dist.push_back(inf);
   }
 
-  dist[s->indx] = 0;
+  dist[s->getIndx()] = 0;
 
   queue<Vertex*> q;
   q.push(s);
@@ -322,11 +351,11 @@ vector<int> Graph::bfsSP(Vertex* s) const {
     Vertex* u = q.front();
     q.pop();
 
-    vector<Vertex*> nbs = getNeighbors(u);
+    vector<Vertex*> nbs = g.getNeighbors(u);
     for (int i = 0, len = nbs.size(); i < len; ++i) {
       Vertex* v = nbs[i];
-      if (dist[v->indx] == inf) {
-        dist[v->indx] = dist[u->indx] + 1;
+      if (dist[v->getIndx()] == inf) {
+        dist[v->getIndx()] = dist[u->getIndx()] + 1;
         q.push(v);
       }
     }

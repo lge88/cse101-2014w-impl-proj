@@ -24,6 +24,8 @@ class Edge {
  public:
   bool contains(int vid);
   int otherEnd(int thisEnd);
+  double getCost() { return cost; }
+  void setCost(double c) { cost = c; }
 };
 
 class Vertex {
@@ -51,6 +53,10 @@ class ListGraph {
   // Basic operations. Basic operations are implemented in this header
   // file ListGraph.hpp.
  public:
+
+  typedef Vertex Vertex;
+  typedef Edge Edge;
+
   ListGraph() {}
   // Random graph constructor. n is the number of vertices, p is edge
   // possibility.
@@ -75,9 +81,9 @@ class ListGraph {
   std::vector<Vertex*> getNeighbors(int uid) const;
   std::vector<Vertex*> getNeighbors(Vertex* u) const;
 
-  std::vector<Edge*> getOutEdges(std::string vname) const;
-  std::vector<Edge*> getOutEdges(int uid) const;
-  std::vector<Edge*> getOutEdges(Vertex* u) const;
+  std::vector<Edge*> getEdges(std::string vname) const;
+  std::vector<Edge*> getEdges(int uid) const;
+  std::vector<Edge*> getEdges(Vertex* u) const;
 
   bool isAdjacent(const std::string& uname, const std::string& vname) const;
   bool isAdjacent(int uid, int vid) const;
@@ -103,43 +109,6 @@ class ListGraph {
   std::vector<Vertex*> vertexVec;
   std::vector<Edge*> edgeVec;
 
-  // Algorithms:
-  // Algorithms are implemented in ListGraph.algo.hpp.
- public:
-  struct MSTState {
-    double cost;
-    double diameter;
-    int nccs;
-    MSTState() : cost(0.0), diameter(0.0), nccs(0) {}
-  };
-
-  std::vector<std::vector<int> > findCCs() const;
-  int getNumOfCCs() const;
-  ListGraph findMST(const std::string&) const;
-  std::vector<ListGraph> findMSTs() const;
-  double calcMSTCost(const std::string&) const;
-  int calcTreeDiameter() const;
-  MSTState calcAvgMSTState() const;
-
-  std::vector<double> dijsktraSP(Vertex*) const;
-  std::vector<double> dijsktraSP(const std::string&) const;
-  std::vector<int> bfsSP(Vertex*) const;
-
-
- private:
-  void findMST(Vertex*, const std::vector<int>&, ListGraph&, double&) const;
-  void findCCHelper(Vertex*, std::map<int, bool>&, std::vector<int>&) const;
-
-  class VertexCompByDist {
-    std::vector<double> dist;
-   public:
-    VertexCompByDist(std::vector<double>& d) : dist(d) {}
-    bool operator()(Vertex* lhs, Vertex* rhs) const {
-      if (dist[lhs->indx] == dist[rhs->indx])
-        return lhs->getName() < rhs->getName();
-      return dist[lhs->indx] < dist[rhs->indx];
-    }
-  };
 };
 
 
@@ -169,7 +138,6 @@ std::vector<int> Vertex::getNeighbors() {
   return vids;
 }
 
-
 std::string itoa(int i) {
   std::stringstream ss;
   ss << i;
@@ -197,11 +165,26 @@ ListGraph::ListGraph(int n, double p) {
       }
     }
   }
-
 }
 
 ListGraph::~ListGraph() {
   clear();
+}
+
+void ListGraph::clear() {
+  std::vector<Vertex*>::iterator it = vertexVec.begin();
+  while(it != vertexVec.end()) {
+    delete *it;
+    ++it;
+  }
+  std::vector<Edge*>::iterator eit = edgeVec.begin();
+  while(eit != edgeVec.end()) {
+    delete *eit;
+    ++eit;
+  }
+  vertexMap.clear();
+  vertexVec.clear();
+  edgeVec.clear();
 }
 
 bool ListGraph::addVertex(int vertexTag) {
@@ -243,22 +226,6 @@ bool ListGraph::addEdge(int uTag, int vTag, double cost) {
   return addEdge("V"+itoa(uTag), "V"+itoa(uTag), cost);
 }
 
-void ListGraph::clear() {
-  std::vector<Vertex*>::iterator it = vertexVec.begin();
-  while(it != vertexVec.end()) {
-    delete *it;
-    ++it;
-  }
-  std::vector<Edge*>::iterator eit = edgeVec.begin();
-  while(eit != edgeVec.end()) {
-    delete *eit;
-    ++eit;
-  }
-  vertexMap.clear();
-  vertexVec.clear();
-  edgeVec.clear();
-}
-
 int ListGraph::getVertexIndex(const std::string& vname) const {
   std::map<std::string,int>::const_iterator it = vertexMap.find(vname);
   if(it == vertexMap.end()) return -1;
@@ -295,6 +262,29 @@ std::vector<Vertex*> ListGraph::getNeighbors(Vertex* u) const {
   for (int i = 0, len = vids.size(); i < len; ++i)
     nbs.push_back(vertexVec[vids[i]]);
   return nbs;
+}
+
+std::vector<Edge*> ListGraph::getEdges(std::string vname) const {
+  return getEdges(getVertex(vname));
+}
+
+std::vector<Edge*> ListGraph::getEdges(int uid) const {
+  return getEdges(getVertex(uid));
+}
+
+std::vector<Edge*> ListGraph::getEdges(Vertex* u) const {
+  std::vector<Edge*> res;
+  if (!u) return res;
+
+  std::list<Edge*>::iterator eit = u->adj.begin();
+  std::list<Edge*>::iterator en = u->adj.end();
+
+  while (eit != en) {
+    res.push_back(*eit);
+    ++eit;
+  }
+
+  return res;
 }
 
 bool ListGraph::isAdjacent(
