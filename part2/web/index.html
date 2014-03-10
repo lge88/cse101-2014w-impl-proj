@@ -9,19 +9,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>TEST</title>
     <style type="text/css" media="screen">
-      #main, #canvas {
-      position: absolute;
-      }
-      #canvas {
-      left: 10px;
-      top: 10px;
-      background: gray;
-      }
+    #canvas {
+        background: gray;
+    }
     </style>
   </head>
   <body>
     <div id="main">
       <canvas id="canvas" width="500" height="500"></canvas>
+      <div>
+        <span>Iteration: </span>
+        <span id="counter"></span>
+      </div>
+      <div>
+        <span>Total number of iterations last time: </span>
+        <span id="last_total"></span>
+      </div>
+      <div><span>N: </span><input id="N" type="text" value="50"/></div>
+      <div><span>r: </span><input id="r" type="text" value="0"/></div>
+      <div>
+        <span>Animate speed: </span>
+        <input id="speed" type="text" value="1000"/>
+        <span>ms</span>
+      </div>
+      <div><button id="update">Update</button></div>
     </div>
     <script src="Pointset.js"></script>
     <script src="grahamScan.js"></script>

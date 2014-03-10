@@ -1,14 +1,20 @@
 
-function Pointset(n) {
+function Pointset(n, r) {
   this.points = [];
 
   if (typeof n === "number") {
-    var r, theta, x, y;
+    var R, theta, x, y;
     while (n-- > 0) {
-      r = Math.random();
+      if (typeof r === "number")
+        R = r*r+Math.random()*(1-r*r);
+      else
+        R = Math.random();
+
       theta = 2*Math.PI*Math.random();
-      x = r*Math.cos(theta);
-      y = r*Math.sin(theta);
+      x = Math.sqrt(R)*Math.cos(theta);
+      y = Math.sqrt(R)*Math.sin(theta);
+      // x = R*Math.cos(theta);
+      // y = R*Math.sin(theta);
       this.points.push([x, y]);
     }
   } else if (Array.isArray(n)){
@@ -59,7 +65,7 @@ Pointset.prototype.loadURL = function(url) {
 }
 
 Pointset.prototype.drawPoints = function(ctx) {
-  var r = 5;
+  var r = 2;
 
   ctx.fillStyle = "#ff0000";
   this.points.forEach(function(p) {
@@ -94,6 +100,36 @@ Pointset.prototype.drawPolygon = function(ctx, indices) {
     ctx.lineTo(x, y);
   }
   p = pts[indices[0]];
+  p = this.toCanvasPoint(p, ctx);
+  x = p[0];
+  y = p[1];
+  ctx.lineTo(x, y);
+  ctx.closePath();
+  ctx.stroke();
+};
+
+Pointset.prototype.drawPolygonPoints = function(ctx, points) {
+
+  var i, len = points.length, x, y, p;
+  if (len <= 1) return;
+
+  ctx.strokeStyle = "#0000ff";
+  ctx.lineWidth = 3;
+
+  ctx.beginPath();
+  p = points[0];
+  p = this.toCanvasPoint(p, ctx);
+  x = p[0];
+  y = p[1];
+  ctx.moveTo(x, y);
+  for (i = 1; i < len; ++i) {
+    p = points[i];
+    p = this.toCanvasPoint(p, ctx);
+    x = p[0];
+    y = p[1];
+    ctx.lineTo(x, y);
+  }
+  p = points[0];
   p = this.toCanvasPoint(p, ctx);
   x = p[0];
   y = p[1];
@@ -146,8 +182,11 @@ Pointset.prototype.toCanvasPoint = function(p, ctx) {
   ];
 };
 
-if (typeof module !== "undefined" && !module.parent) {
-  var n = parseInt(process.argv[2]);
-  var pts = new Pointset(n);
-  console.log(pts.toJS());
+if (typeof module !== "undefined") {
+  module.exports = exports = Pointset;
+  if (!module.parent) {
+    var n = parseInt(process.argv[2]);
+    var pts = new Pointset(n);
+    console.log(pts.toJS());
+  }
 }

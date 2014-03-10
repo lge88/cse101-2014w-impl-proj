@@ -90,27 +90,48 @@ function Stack() {
   };
 }
 
+function distSq(p1, p2) {
+  var dx = p2[0] - p1[0], dy = p2[1] - p1[1];
+  return dx*dx+dy*dy;
+}
+
 // Given points as 2D array, this algorithm points indices that makes
 // the convex hull polygon.
 function grahamScan(points) {
   var N = points.length;
   if (N == 0) return [];
   if (N == 1) return [0];
+  if (N == 2) return [0, 1];
 
+  // console.time("findLowest");
   var yi = findLowestYIndx(points);
+  // console.timeEnd("findLowest");
   swap(points, 0, yi);
   p0 = points[0];
 
-  var byPolarAngle = function(p1, p2) {
-    return polarAngle(p0, p1) - polarAngle(p0, p2);
-  }
-  qsort(points, 1, N-1, byPolarAngle);
+  var compare = function(p1, p2) {
+    if (p1[0] == p0[0] && p1[1] == p0[1])
+      return -1;
+    if (p2[0] == p0[0] && p2[1] == p0[1])
+      return 1;
+    var o = ccw(p0, p1, p2);
+    if (o == 0)
+      return distSq(p0, p1) - distSq(p0, p1);
+    return -o;
+  };
+
+  // console.time("sort");
+  // home made quick sort is much slower than Array.prototype.sort.
+  // qsort(points, 1, N-1, compare);
+  points.sort(compare);
+  // console.timeEnd("sort");
 
   var s = new Stack();
   s.push(0);
   s.push(1);
   s.push(2);
 
+  // console.time("scan");
   var i, a, b;
   for (i = 3; i < N; ++i) {
     a = s.nextToTop();
@@ -122,6 +143,11 @@ function grahamScan(points) {
     }
     s.push(i);
   }
+  // console.timeEnd("scan");
 
   return s.toArray();
+}
+
+if (typeof module !== "undefined") {
+  module.exports = exports = grahamScan;
 }
