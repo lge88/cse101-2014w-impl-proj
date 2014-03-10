@@ -12,7 +12,7 @@ EXES += testFindMST
 EXES += testFindCC
 EXES += testRandomGraph
 EXES += part1
-EXES += part1_2
+#EXES += part1_2
 
 all: $(EXES)
 
